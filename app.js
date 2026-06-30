@@ -1,13 +1,132 @@
 // NudgeAI Core Application Logic
 
-// API Configuration
-const API_BASE = window.location.protocol.startsWith('http') ? '/api' : 'http://localhost:3000/api';
-
 // Initial Application State
-let tasks = [];
-let calendarBlocks = [];
-let goals = [];
-let nudges = [];
+let tasks = [
+  {
+    id: "task-1",
+    title: "Research Paper Draft",
+    deadlineHours: 14,
+    duration: 3,
+    dependency: "Literature Review",
+    goalCategory: "Academic",
+    autoExecute: true,
+    completed: false,
+    score: 92,
+    progress: 40
+  },
+  {
+    id: "task-2",
+    title: "Prep Interview Answers",
+    deadlineHours: 36,
+    duration: 2,
+    dependency: "",
+    goalCategory: "Career",
+    autoExecute: true,
+    completed: false,
+    score: 74,
+    progress: 0
+  },
+  {
+    id: "task-3",
+    title: "Gym Session",
+    deadlineHours: 8,
+    duration: 1.5,
+    dependency: "",
+    goalCategory: "Personal",
+    autoExecute: false,
+    completed: false,
+    score: 45,
+    progress: 0
+  }
+];
+
+let calendarBlocks = [
+  {
+    id: "cal-1",
+    title: "Weekly Status Sync (Fixed)",
+    startHour: 9, // 9:00 AM
+    duration: 1.0,
+    day: "today",
+    type: "fixed",
+    completed: false
+  },
+  {
+    id: "cal-2",
+    title: "Research Paper Draft (Suggested)",
+    startHour: 11, // 11:00 AM
+    duration: 2.0,
+    day: "today",
+    type: "suggested",
+    completed: false
+  },
+  {
+    id: "cal-3",
+    title: "Gym Session (Conflict Event)",
+    startHour: 18, // 6:00 PM
+    duration: 1.5,
+    day: "today",
+    type: "fixed",
+    completed: false
+  },
+  {
+    id: "cal-4",
+    title: "Mock Interview (Fixed)",
+    startHour: 10, // 10:00 AM
+    duration: 1.5,
+    day: "tomorrow",
+    type: "fixed",
+    completed: false
+  }
+];
+
+let nudges = [
+  {
+    id: "nudge-1",
+    type: "urgent",
+    title: "Urgency Escalation",
+    message: "Research Paper Draft is due in 14 hours. Only 40% complete. Let's schedule a 2-hour focus block now.",
+    actionLabel: "Schedule Block",
+    actionType: "schedule_research"
+  },
+  {
+    id: "nudge-2",
+    type: "action",
+    title: "Autonomous Action Pending",
+    message: "Based on your procrastination risk, I pre-drafted an email to Professor Jones requesting a 24h extension.",
+    actionLabel: "Review Draft",
+    actionType: "view_email_draft"
+  },
+  {
+    id: "nudge-3",
+    type: "suggested",
+    title: "Calendar Conflict Detected",
+    message: "Gym Session at 6 PM conflicts with Essay Outline block. Move Gym to 7:30 PM to resolve?",
+    actionLabel: "Reschedule Gym",
+    actionType: "resolve_gym"
+  }
+];
+
+let goals = [
+  {
+    id: "goal-1",
+    title: "Apply to 5 jobs a week",
+    type: "Habit",
+    target: "5 times/week",
+    streak: 4,
+    subtasks: ["Tailor resume", "Submit LinkedIn apps", "Follow up emails"],
+    progress: 80
+  },
+  {
+    id: "goal-2",
+    title: "Finish Thesis Outline",
+    type: "Milestone",
+    target: "Due Dec 15",
+    streak: 0,
+    subtasks: ["Intro draft", "Methodology chapter", "Bibliography list"],
+    progress: 30
+  }
+];
+
 let chatHistory = [
   {
     sender: "assistant",
@@ -19,334 +138,17 @@ let simulatorStep = 0;
 let activeTab = "dashboard";
 let taskFilter = "all";
 
-// Auth State
-let currentUser = null;
-let authToken = localStorage.getItem('nudgeai_token');
-
-// Helper to get authorization headers
-function getHeaders() {
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${authToken}`
-  };
-}
-
-// ----------------------------------------------------
-// AUTHENTICATION LOGIC
-// ----------------------------------------------------
-function toggleAuthMode(e) {
-  if (e) e.preventDefault();
-  const loginForm = document.getElementById('login-form');
-  const registerForm = document.getElementById('register-form');
-  const cardTitle = document.querySelector('.login-header h2');
-  
-  if (loginForm.style.display === 'none') {
-    loginForm.style.display = 'flex';
-    registerForm.style.display = 'none';
-    cardTitle.innerText = 'NudgeAI';
-  } else {
-    loginForm.style.display = 'none';
-    registerForm.style.display = 'flex';
-    cardTitle.innerText = 'Sign Up';
-  }
-}
-
-function handleLogin(e) {
-  e.preventDefault();
-  const usernameInput = document.getElementById('login-username');
-  const passwordInput = document.getElementById('login-password');
-  
-  const payload = {
-    username: usernameInput.value.trim(),
-    password: passwordInput.value
-  };
-  
-  fetch(`${API_BASE}/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-  .then(res => {
-    if (!res.ok) return res.json().then(data => { throw new Error(data.error || 'Login failed') });
-    return res.json();
-  })
-  .then(data => {
-    authToken = data.token;
-    currentUser = data.user;
-    localStorage.setItem('nudgeai_token', authToken);
-    
-    // Clear credentials
-    usernameInput.value = '';
-    passwordInput.value = '';
-    
-    document.getElementById('login-container').classList.add('hidden');
-    showToast(`Welcome back, ${currentUser.fullName}!`, 'success');
-    initApp();
-  })
-  .catch(err => {
-    console.error(err);
-    showToast(err.message, 'warning');
-  });
-}
-
-function handleRegister(e) {
-  e.preventDefault();
-  const fullNameInput = document.getElementById('register-fullname');
-  const roleInput = document.getElementById('register-role');
-  const usernameInput = document.getElementById('register-username');
-  const passwordInput = document.getElementById('register-password');
-  
-  const payload = {
-    fullName: fullNameInput.value.trim(),
-    role: roleInput.value.trim(),
-    username: usernameInput.value.trim(),
-    password: passwordInput.value
-  };
-  
-  fetch(`${API_BASE}/auth/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  })
-  .then(res => {
-    if (!res.ok) return res.json().then(data => { throw new Error(data.error || 'Registration failed') });
-    return res.json();
-  })
-  .then(data => {
-    authToken = data.token;
-    currentUser = data.user;
-    localStorage.setItem('nudgeai_token', authToken);
-    
-    // Clear credentials
-    fullNameInput.value = '';
-    roleInput.value = '';
-    usernameInput.value = '';
-    passwordInput.value = '';
-    
-    document.getElementById('login-container').classList.add('hidden');
-    showToast(`Account created successfully! Welcome, ${currentUser.fullName}.`, 'success');
-    initApp();
-  })
-  .catch(err => {
-    console.error(err);
-    showToast(err.message, 'warning');
-  });
-}
-
-function handleLogout() {
-  authToken = null;
-  currentUser = null;
-  localStorage.removeItem('nudgeai_token');
-  
-  // Clear arrays
-  tasks = [];
-  calendarBlocks = [];
-  goals = [];
-  nudges = [];
-  
-  // Show login
-  document.getElementById('login-container').classList.remove('hidden');
-  
-  // Toggle form back to login mode if on register
-  const loginForm = document.getElementById('login-form');
-  const registerForm = document.getElementById('register-form');
-  loginForm.style.display = 'flex';
-  registerForm.style.display = 'none';
-  document.querySelector('.login-header h2').innerText = 'NudgeAI';
-  
-  showToast('Logged out successfully.', 'success');
-}
-
-function checkAuth() {
-  if (!authToken) {
-    document.getElementById('login-container').classList.remove('hidden');
-    return;
-  }
-  
-  fetch(`${API_BASE}/auth/me`, {
-    headers: getHeaders()
-  })
-  .then(res => {
-    if (!res.ok) throw new Error('Session expired');
-    return res.json();
-  })
-  .then(data => {
-    currentUser = data.user;
-    document.getElementById('login-container').classList.add('hidden');
-    initApp();
-  })
-  .catch(err => {
-    console.warn(err);
-    handleLogout();
-  });
-}
-
-function initApp() {
-  updateUserProfileUI();
-  
-  // Load tasks, goals, calendar, activities from API
-  Promise.all([
-    fetchTasks(),
-    fetchCalendar(),
-    fetchGoals(),
-    fetchActivities()
-  ])
-  .then(() => {
-    // Seed standard initial demo nudges if none exist
-    if (nudges.length === 0) {
-      nudges = [
-        {
-          id: "nudge-1",
-          type: "urgent",
-          title: "Urgency Escalation",
-          message: "Research Paper Draft is due in 14 hours. Only 40% complete. Let's schedule a 2-hour focus block now.",
-          actionLabel: "Schedule Block",
-          actionType: "schedule_research"
-        },
-        {
-          id: "nudge-2",
-          type: "action",
-          title: "Autonomous Action Pending",
-          message: "Based on your procrastination risk, I pre-drafted an email to Professor Jones requesting a 24h extension.",
-          actionLabel: "Review Draft",
-          actionType: "view_email_draft"
-        },
-        {
-          id: "nudge-3",
-          type: "suggested",
-          title: "Calendar Conflict Detected",
-          message: "Gym Session at 6 PM conflicts with Essay Outline block. Move Gym to 7:30 PM to resolve?",
-          actionLabel: "Reschedule Gym",
-          actionType: "resolve_gym"
-        }
-      ];
-    }
-    
-    renderTasks();
-    renderNudges();
-    renderGoals();
-    renderCalendar();
-    renderChat();
-    updateDependencyDropdown();
-  })
-  .catch(err => {
-    console.error('Error loading app data:', err);
-    showToast('Failed to load user data from database.', 'danger');
-  });
-}
-
-function updateUserProfileUI() {
-  if (!currentUser) return;
-  
-  // Update name and role
-  document.getElementById('user-display-name').innerText = currentUser.fullName;
-  document.getElementById('user-display-role').innerText = currentUser.role;
-  
-  // Update initials
-  const initials = currentUser.fullName
-    .split(' ')
-    .map(name => name[0])
-    .join('')
-    .substring(0, 2)
-    .toUpperCase();
-  document.getElementById('user-avatar-initials').innerText = initials;
-}
-
-// ----------------------------------------------------
-// API FETCH HELPERS
-// ----------------------------------------------------
-function fetchTasks() {
-  return fetch(`${API_BASE}/tasks`, { headers: getHeaders() })
-    .then(res => res.json())
-    .then(data => { tasks = data; });
-}
-
-function fetchCalendar() {
-  return fetch(`${API_BASE}/calendar`, { headers: getHeaders() })
-    .then(res => res.json())
-    .then(data => { calendarBlocks = data; });
-}
-
-function fetchGoals() {
-  return fetch(`${API_BASE}/goals`, { headers: getHeaders() })
-    .then(res => res.json())
-    .then(data => { goals = data; });
-}
-
-function fetchActivities() {
-  return fetch(`${API_BASE}/activities`, { headers: getHeaders() })
-    .then(res => res.json())
-    .then(renderActivities);
-}
-
-function renderActivities(activities) {
-  const container = document.getElementById('activity-log-list');
-  if (!container) return;
-  
-  container.innerHTML = '';
-  
-  if (!activities || activities.length === 0) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <i data-lucide="info" style="width: 48px; height: 48px; color: var(--text-muted);"></i>
-        <p>No activity logs found in database.</p>
-      </div>
-    `;
-    lucide.createIcons();
-    return;
-  }
-  
-  activities.forEach(act => {
-    const item = document.createElement('div');
-    item.className = 'activity-item';
-    
-    // Choose icon based on activity type
-    let iconName = 'info';
-    if (act.activity_type === 'task_complete') iconName = 'check';
-    else if (act.activity_type === 'task_create') iconName = 'plus-circle';
-    else if (act.activity_type === 'task_reopen') iconName = 'rotate-ccw';
-    else if (act.activity_type === 'goal_create') iconName = 'target';
-    else if (act.activity_type === 'auth') iconName = 'user-check';
-    
-    const formattedDate = new Date(act.timestamp).toLocaleString();
-    
-    item.innerHTML = `
-      <div class="activity-icon ${act.activity_type}">
-        <i data-lucide="${iconName}"></i>
-      </div>
-      <div class="activity-details">
-        <div class="activity-text">${act.description}</div>
-        <div class="activity-time">${formattedDate}</div>
-      </div>
-    `;
-    container.appendChild(item);
-  });
-  
-  lucide.createIcons();
-}
-
-function clearActivityLog() {
-  if (confirm('Are you sure you want to clear your activity logs? This cannot be undone.')) {
-    fetch(`${API_BASE}/activities`, {
-      method: 'DELETE',
-      headers: getHeaders()
-    })
-    .then(res => res.json())
-    .then(() => {
-      showToast('Activity logs cleared.', 'success');
-      fetchActivities();
-    })
-    .catch(err => {
-      console.error(err);
-      showToast('Failed to clear logs.', 'danger');
-    });
-  }
-}
-
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {
-  // Check auth and bootstrap
-  checkAuth();
+  // Re-render UI elements
+  renderTasks();
+  renderNudges();
+  renderGoals();
+  renderCalendar();
+  renderChat();
+  
+  // Initialize Lucide Icons
+  lucide.createIcons();
   
   // Set Calendar Dates
   const today = new Date();
@@ -356,6 +158,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const options = { month: 'short', day: 'numeric' };
   document.getElementById("calendar-today-date").innerText = today.toLocaleDateString('en-US', options);
   document.getElementById("calendar-tomorrow-date").innerText = tomorrow.toLocaleDateString('en-US', options);
+  
+  // Seed initial task select dependencies
+  updateDependencyDropdown();
 });
 
 // Switch Dashboard Tab Views
@@ -527,56 +332,19 @@ function filterTasks(type) {
 function toggleTaskCompletion(taskId) {
   const task = tasks.find(t => t.id === taskId);
   if (task) {
-    const newCompletedState = !task.completed;
+    task.completed = !task.completed;
     
-    if (authToken) {
-      fetch(`${API_BASE}/tasks/${taskId}`, {
-        method: 'PUT',
-        headers: getHeaders(),
-        body: JSON.stringify({ completed: newCompletedState })
-      })
-      .then(res => {
-        if (!res.ok) throw new Error("Failed to update task completion");
-        return res.json();
-      })
-      .then(() => {
-        task.completed = newCompletedState;
-        // Toggle matching calendar blocks completion
-        calendarBlocks.forEach(block => {
-          if (block.title.includes(task.title)) {
-            block.completed = task.completed;
-            block.type = task.completed ? "completed" : "suggested";
-            
-            // Save calendar block state to DB as well
-            fetch(`${API_BASE}/calendar/${block.id}`, {
-              method: 'PUT',
-              headers: getHeaders(),
-              body: JSON.stringify({ completed: block.completed, type: block.type })
-            }).catch(err => console.error(err));
-          }
-        });
-        
-        showToast(task.completed ? `Completed task: ${task.title}` : `Re-opened task: ${task.title}`, "success");
-        renderTasks();
-        renderCalendar();
-        fetchActivities(); // Refresh activities list!
-      })
-      .catch(err => {
-        console.error(err);
-        showToast(err.message, "danger");
-      });
-    } else {
-      task.completed = newCompletedState;
-      calendarBlocks.forEach(block => {
-        if (block.title.includes(task.title)) {
-          block.completed = task.completed;
-          block.type = task.completed ? "completed" : "suggested";
-        }
-      });
-      showToast(task.completed ? `Completed task: ${task.title} (Demo Mode)` : `Re-opened task: ${task.title} (Demo Mode)`, "success");
-      renderTasks();
-      renderCalendar();
-    }
+    // Toggle matching calendar blocks completion
+    calendarBlocks.forEach(block => {
+      if (block.title.includes(task.title)) {
+        block.completed = task.completed;
+        block.type = task.completed ? "completed" : "suggested";
+      }
+    });
+    
+    showToast(task.completed ? `Completed task: ${task.title}` : `Re-opened task: ${task.title}`, "success");
+    renderTasks();
+    renderCalendar();
   }
 }
 
@@ -627,41 +395,18 @@ function submitAddTask() {
     score: 50,
     progress: 0
   };
-
-  if (authToken) {
-    fetch(`${API_BASE}/tasks`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(newTask)
-    })
-    .then(res => {
-      if (!res.ok) throw new Error("Failed to save task to database");
-      return res.json();
-    })
-    .then(savedTask => {
-      tasks.push(savedTask);
-      closeAddTaskModal();
-      suggestCalendarBlockForTask(savedTask);
-      showToast(`Task "${title}" saved and prioritized by AI!`, "success");
-      renderTasks();
-      renderCalendar();
-      updateDependencyDropdown();
-      fetchActivities(); // Refresh activity log!
-    })
-    .catch(err => {
-      console.error(err);
-      showToast(err.message, "danger");
-    });
-  } else {
-    // Offline / demo fallback
-    tasks.push(newTask);
-    closeAddTaskModal();
-    suggestCalendarBlockForTask(newTask);
-    showToast(`Task "${title}" prioritized by AI! (Demo Mode)`, "success");
-    renderTasks();
-    renderCalendar();
-    updateDependencyDropdown();
-  }
+  
+  tasks.push(newTask);
+  closeAddTaskModal();
+  
+  // Proactively suggest calendar block
+  suggestCalendarBlockForTask(newTask);
+  
+  showToast(`Task "${title}" prioritized by AI!`, "success");
+  
+  renderTasks();
+  renderCalendar();
+  updateDependencyDropdown();
   
   // Reset fields
   document.getElementById("task-title").value = "";
@@ -675,7 +420,7 @@ function suggestCalendarBlockForTask(task) {
   const hour = isConflict ? 16 : 14;
   const day = task.deadlineHours < 24 ? "today" : "tomorrow";
   
-  const newBlock = {
+  calendarBlocks.push({
     id: `cal-${Date.now()}`,
     title: `${task.title} (Suggested)`,
     startHour: hour,
@@ -683,23 +428,7 @@ function suggestCalendarBlockForTask(task) {
     day: day,
     type: "suggested",
     completed: false
-  };
-
-  if (authToken) {
-    fetch(`${API_BASE}/calendar`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(newBlock)
-    })
-    .then(res => res.json())
-    .then(savedBlock => {
-      calendarBlocks.push(savedBlock);
-      renderCalendar();
-    })
-    .catch(err => console.error("Error creating calendar block in db", err));
-  } else {
-    calendarBlocks.push(newBlock);
-  }
+  });
   
   // Trigger a context aware nudge
   nudges.unshift({
@@ -889,61 +618,19 @@ function renderCalendar() {
     
     // Click action: Toggle completion in calendar
     blockEl.onclick = () => {
-      const newCompleted = !block.completed;
-      const newType = newCompleted ? "completed" : "suggested";
+      block.completed = !block.completed;
+      block.type = block.completed ? "completed" : "suggested";
+      showToast(`${block.completed ? 'Finished' : 'Rescheduled'} slot: ${block.title}`, "success");
       
-      if (authToken) {
-        fetch(`${API_BASE}/calendar/${block.id}`, {
-          method: 'PUT',
-          headers: getHeaders(),
-          body: JSON.stringify({ completed: newCompleted, type: newType })
-        })
-        .then(res => {
-          if (!res.ok) throw new Error("Failed to update calendar block");
-          
-          block.completed = newCompleted;
-          block.type = newType;
-          
-          showToast(`${block.completed ? 'Finished' : 'Rescheduled'} slot: ${block.title}`, "success");
-          
-          // Sync associated task status
-          tasks.forEach(t => {
-            if (block.title.includes(t.title)) {
-              if (t.completed !== block.completed) {
-                // Call task update
-                fetch(`${API_BASE}/tasks/${t.id}`, {
-                  method: 'PUT',
-                  headers: getHeaders(),
-                  body: JSON.stringify({ completed: block.completed })
-                })
-                .then(res => res.json())
-                .then(() => {
-                  t.completed = block.completed;
-                  renderTasks();
-                  fetchActivities();
-                });
-              }
-            }
-          });
-          
-          renderCalendar();
-        })
-        .catch(err => {
-          console.error(err);
-          showToast(err.message, "danger");
-        });
-      } else {
-        block.completed = newCompleted;
-        block.type = newType;
-        showToast(`${block.completed ? 'Finished' : 'Rescheduled'} slot: ${block.title} (Demo Mode)`, "success");
-        tasks.forEach(t => {
-          if (block.title.includes(t.title)) {
-            t.completed = block.completed;
-          }
-        });
-        renderCalendar();
-        renderTasks();
-      }
+      // Update tasks completed state if task title matches
+      tasks.forEach(t => {
+        if (block.title.includes(t.title)) {
+          t.completed = block.completed;
+        }
+      });
+      
+      renderCalendar();
+      renderTasks();
     };
     
     container.appendChild(blockEl);
@@ -1070,46 +757,19 @@ function submitAddGoal() {
     return;
   }
   
-  const newGoal = {
+  goals.push({
     id: `goal-${Date.now()}`,
     title,
     type,
-    target: target || "Continuous"
-  };
-
-  if (authToken) {
-    fetch(`${API_BASE}/goals`, {
-      method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(newGoal)
-    })
-    .then(res => {
-      if (!res.ok) throw new Error("Failed to save goal to database");
-      return res.json();
-    })
-    .then(savedGoal => {
-      goals.push(savedGoal);
-      closeAddGoalModal();
-      showToast(`Goal "${title}" added to habits tracker!`, "success");
-      renderGoals();
-      fetchActivities(); // Refresh activities
-    })
-    .catch(err => {
-      console.error(err);
-      showToast(err.message, "danger");
-    });
-  } else {
-    // Demo fallback
-    goals.push({
-      ...newGoal,
-      streak: 0,
-      subtasks: ["Initial research", "Schedule recurring block", "First draft execution"],
-      progress: 10
-    });
-    closeAddGoalModal();
-    showToast(`Goal "${title}" added to habits tracker! (Demo Mode)`, "success");
-    renderGoals();
-  }
+    target: target || "Continuous",
+    streak: 0,
+    subtasks: ["Initial research", "Schedule recurring block", "First draft execution"],
+    progress: 10
+  });
+  
+  closeAddGoalModal();
+  showToast(`Goal "${title}" added to habits tracker!`, "success");
+  renderGoals();
   
   // Clear fields
   document.getElementById("goal-title").value = "";

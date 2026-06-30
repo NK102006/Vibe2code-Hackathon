@@ -19,53 +19,6 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Login/Signup Overlay -->
-  <div id="login-container" class="login-screen-overlay">
-    <div class="login-card glass-panel">
-      <div class="login-header">
-        <div class="logo-icon">N</div>
-        <h2>NudgeAI</h2>
-        <p>The Last-Minute Life Saver</p>
-      </div>
-      
-      <!-- Login Form -->
-      <form id="login-form" onsubmit="handleLogin(event)">
-        <div class="form-group">
-          <label for="login-username">Username</label>
-          <input type="text" id="login-username" placeholder="e.g. alex_newman" required>
-        </div>
-        <div class="form-group">
-          <label for="login-password">Password</label>
-          <input type="password" id="login-password" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="action-btn-primary login-btn">Sign In</button>
-        <p class="auth-switch">Don't have an account? <a href="#" onclick="toggleAuthMode(event)">Sign Up</a></p>
-      </form>
-      
-      <!-- Register Form -->
-      <form id="register-form" onsubmit="handleRegister(event)" style="display: none;">
-        <div class="form-group">
-          <label for="register-fullname">Full Name</label>
-          <input type="text" id="register-fullname" placeholder="e.g. Alex Newman" required>
-        </div>
-        <div class="form-group">
-          <label for="register-role">Role/Occupation</label>
-          <input type="text" id="register-role" placeholder="e.g. Student / Freelancer" required>
-        </div>
-        <div class="form-group">
-          <label for="register-username">Username</label>
-          <input type="text" id="register-username" placeholder="e.g. alex_newman" required>
-        </div>
-        <div class="form-group">
-          <label for="register-password">Password</label>
-          <input type="password" id="register-password" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="action-btn-primary login-btn">Sign Up</button>
-        <p class="auth-switch">Already have an account? <a href="#" onclick="toggleAuthMode(event)">Sign In</a></p>
-      </form>
-    </div>
-  </div>
-
   <div class="app-container">
     
     <!-- Sidebar Navigation -->
@@ -102,22 +55,15 @@
           <i data-lucide="play-circle"></i>
           <span>Crunch Simulator</span>
         </button>
-        <button class="nav-item" id="nav-activity" onclick="switchTab('activity')">
-          <i data-lucide="history"></i>
-          <span>Activity Log</span>
-        </button>
       </nav>
       
       <div class="sidebar-footer">
         <div class="user-profile">
-          <div class="avatar" id="user-avatar-initials">AN</div>
+          <div class="avatar">AN</div>
           <div class="user-info">
-            <span class="user-name" id="user-display-name">Alex Newman</span>
-            <span class="user-role" id="user-display-role">Student / Freelancer</span>
+            <span class="user-name">Alex Newman</span>
+            <span class="user-role">Student / Freelancer</span>
           </div>
-          <button class="logout-btn" onclick="handleLogout()" title="Sign Out">
-            <i data-lucide="log-out"></i>
-          </button>
         </div>
       </div>
     </aside>
@@ -417,25 +363,6 @@
               <div class="sim-output-console" id="sim-console">
                 <div class="console-line system">&gt;&gt; Ready to run simulator. Click "Simulate Step 1" to begin.</div>
               </div>
-            </div>
-          </div>
-        </section>
-        
-        <!-- ================= ACTIVITY LOG VIEW ================= -->
-        <section id="view-activity" class="tab-view">
-          <div class="activity-container glass-panel">
-            <div class="panel-header">
-              <div class="panel-title-container">
-                <i data-lucide="history" class="icon-accent"></i>
-                <h3>User Activity Database Logs</h3>
-              </div>
-              <button class="action-btn-secondary" onclick="clearActivityLog()">
-                <i data-lucide="trash-2"></i> Clear Logs
-              </button>
-            </div>
-            
-            <div class="activity-list" id="activity-log-list">
-              <!-- JS will dynamically render activity logs -->
             </div>
           </div>
         </section>
