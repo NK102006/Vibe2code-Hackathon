@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NudgeAI — The Last-Minute Life Saver</title>
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="NudgeAI is an AI-powered proactive productivity companion that plans, prioritizes, and acts on your behalf before deadlines hit.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-container">
+          <div class="logo-icon">N</div>
+          <div>
+            <h1 class="logo-text">NudgeAI</h1>
+            <span class="logo-subtext">The Last-Minute Life Saver</span>
+          </div>
+        </div>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <button class="nav-item active" id="nav-dashboard" onclick="switchTab('dashboard')">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </button>
+        <button class="nav-item" id="nav-calendar" onclick="switchTab('calendar')">
+          <i data-lucide="calendar"></i>
+          <span>Smart Calendar</span>
+        </button>
+        <button class="nav-item" id="nav-goals" onclick="switchTab('goals')">
+          <i data-lucide="target"></i>
+          <span>Goals & Habits</span>
+        </button>
+        <button class="nav-item" id="nav-chat" onclick="switchTab('chat')">
+          <i data-lucide="message-square"></i>
+          <span>AI Companion</span>
+          <span class="badge" id="chat-badge" style="display: none;">1</span>
+        </button>
+        <button class="nav-item" id="nav-simulator" onclick="switchTab('simulator')">
+          <i data-lucide="play-circle"></i>
+          <span>Crunch Simulator</span>
+        </button>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-profile">
+          <div class="avatar">AN</div>
+          <div class="user-info">
+            <span class="user-name">Alex Newman</span>
+            <span class="user-role">Student / Freelancer</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+    
+    <!-- Main Content Area -->
+    <main class="main-content">
+      
+      <!-- Top Header -->
+      <header class="main-header">
+        <div class="header-left">
+          <h2 id="view-title">Dashboard Overview</h2>
+          <p id="view-subtitle" class="text-secondary">Proactively guiding your productivity today.</p>
+        </div>
+        <div class="header-right">
+          <!-- Active Focus Widget -->
+          <div class="focus-widget glass-panel">
+            <span class="pulse-indicator"></span>
+            <div class="focus-info">
+              <span class="label">CURRENT FOCUS SUGGESTION</span>
+              <span class="value" id="current-focus-text">Research Paper Draft (Peak Focus Hour)</span>
+            </div>
+            <button class="focus-btn" onclick="startFocusSession()">Start</button>
+          </div>
+          
+          <button class="action-btn-primary" onclick="openAddTaskModal()">
+            <i data-lucide="plus"></i>
+            <span>Add Task</span>
+          </button>
+        </div>
+      </header>
+      
+      <!-- Views Container -->
+      <div class="view-container">
+        
+        <!-- ================= DASHBOARD VIEW ================= -->
+        <section id="view-dashboard" class="tab-view active">
+          <div class="dashboard-grid">
+            
+            <!-- Left Side: Prioritized Tasks -->
+            <div class="grid-col-8">
+              <div class="glass-panel main-panel">
+                <div class="panel-header">
+                  <div class="panel-title-container">
+                    <i data-lucide="arrow-up-narrow-wide" class="icon-accent"></i>
+                    <h3>AI-Prioritized Focus List</h3>
+                  </div>
+                  <span class="panel-badge">Dynamic Re-Ranking</span>
+                </div>
+                
+                <div class="task-list-filters">
+                  <span class="filter-label">Sort: AI Score (Urgency * 0.4 + Effort * 0.3 + Deps * 0.3)</span>
+                  <div class="filter-options">
+                    <span class="filter-chip active" id="filter-all" onclick="filterTasks('all')">All Tasks</span>
+                    <span class="filter-chip" id="filter-pending" onclick="filterTasks('pending')">Pending</span>
+                    <span class="filter-chip" id="filter-completed" onclick="filterTasks('completed')">Completed</span>
+                  </div>
+                </div>
+                
+                <div class="task-list" id="dashboard-task-list">
+                  <!-- JS will dynamically render prioritized tasks -->
+                </div>
+              </div>
+            </div>
+            
+            <!-- Right Side: Nudges & Recommendations -->
+            <div class="grid-col-4">
+              <!-- Proactive Nudge Feed -->
+              <div class="glass-panel nudge-panel">
+                <div class="panel-header">
+                  <div class="panel-title-container">
+                    <i data-lucide="bell-ring" class="icon-warning"></i>
+                    <h3>Proactive Nudges</h3>
+                  </div>
+                  <span class="badge badge-warning" id="nudge-count">3</span>
+                </div>
+                
+                <div class="nudge-feed" id="dashboard-nudge-feed">
+                  <!-- JS will dynamically render nudge notifications -->
+                </div>
+              </div>
+              
+              <!-- Streak & Goals Mini Widget -->
+              <div class="glass-panel stat-panel">
+                <div class="panel-header">
+                  <div class="panel-title-container">
+                    <i data-lucide="flame" class="icon-danger"></i>
+                    <h3>Habit Loop Tracker</h3>
+                  </div>
+                </div>
+                <div class="stat-content">
+                  <div class="streak-circle-container">
+                    <div class="streak-value" id="streak-val-display">5</div>
+                    <div class="streak-label">Day Streak</div>
+                  </div>
+                  <div class="goals-mini-list" id="goals-mini-list">
+                    <!-- JS will render mini goals -->
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </section>
+        
+        <!-- ================= CALENDAR VIEW ================= -->
+        <section id="view-calendar" class="tab-view">
+          <div class="calendar-layout glass-panel">
+            <div class="panel-header">
+              <div class="panel-title-container">
+                <i data-lucide="calendar" class="icon-accent"></i>
+                <h3>Smart Scheduling Assistance</h3>
+              </div>
+              <div class="calendar-actions">
+                <span class="legend-item"><span class="legend-color block-fixed"></span> Calendar Event</span>
+                <span class="legend-item"><span class="legend-color block-suggested"></span> AI Suggested Block</span>
+                <span class="legend-item"><span class="legend-color block-completed"></span> Completed</span>
+              </div>
+            </div>
+            
+            <div class="calendar-grid-container">
+              <!-- Time column + Days layout -->
+              <div class="calendar-timeline">
+                <div class="timeline-header">Time</div>
+                <div class="timeline-slot">08:00 AM</div>
+                <div class="timeline-slot">09:00 AM</div>
+                <div class="timeline-slot">10:00 AM</div>
+                <div class="timeline-slot">11:00 AM</div>
+                <div class="timeline-slot">12:00 PM</div>
+                <div class="timeline-slot">01:00 PM</div>
+                <div class="timeline-slot">02:00 PM</div>
+                <div class="timeline-slot">03:00 PM</div>
+                <div class="timeline-slot">04:00 PM</div>
+                <div class="timeline-slot">05:00 PM</div>
+                <div class="timeline-slot">06:00 PM</div>
+                <div class="timeline-slot">07:00 PM</div>
+                <div class="timeline-slot">08:00 PM</div>
+                <div class="timeline-slot">09:00 PM</div>
+              </div>
+              
+              <div class="calendar-day-columns">
+                <div class="day-column today">
+                  <div class="day-header">
+                    <span class="day-name">TODAY</span>
+                    <span class="day-date" id="calendar-today-date">June 25</span>
+                  </div>
+                  <div class="day-slots-container" id="calendar-slots-today">
+                    <!-- JS will fill with absolute-positioned blocks -->
+                  </div>
+                </div>
+                
+                <div class="day-column">
+                  <div class="day-header">
+                    <span class="day-name">TOMORROW</span>
+                    <span class="day-date" id="calendar-tomorrow-date">June 26</span>
+                  </div>
+                  <div class="day-slots-container" id="calendar-slots-tomorrow">
+                    <!-- JS will fill with tomorrow's blocks -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- ================= GOALS VIEW ================= -->
+        <section id="view-goals" class="tab-view">
+          <div class="goals-container">
+            <div class="glass-panel">
+              <div class="panel-header">
+                <div class="panel-title-container">
+                  <i data-lucide="target" class="icon-accent"></i>
+                  <h3>Habits & Long-Term Goals</h3>
+                </div>
+                <button class="action-btn-secondary" onclick="openAddGoalModal()">
+                  <i data-lucide="plus"></i> Add Goal
+                </button>
+              </div>
+              
+              <div class="goals-grid" id="goals-full-list">
+                <!-- JS will render habit and goal cards -->
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- ================= CHAT ASSISTANT VIEW ================= -->
+        <section id="view-chat" class="tab-view">
+          <div class="chat-container glass-panel">
+            <div class="chat-sidebar">
+              <div class="chat-sidebar-header">
+                <h4>AI Productivity Advisor</h4>
+              </div>
+              <div class="assistant-status-card">
+                <div class="status-avatar"><i data-lucide="bot"></i></div>
+                <div class="status-details">
+                  <h5>NudgeAI Agent</h5>
+                  <span class="status-indicator-text"><span class="pulse-indicator"></span> Active Monitoring</span>
+                </div>
+              </div>
+              <div class="quick-prompts">
+                <span class="quick-prompt-title">Ask NudgeAI:</span>
+                <button class="quick-prompt-btn" onclick="sendChatPrompt('What should I focus on right now?')">"What should I focus on?"</button>
+                <button class="quick-prompt-btn" onclick="sendChatPrompt('Am I on track for my deadlines?')">"Am I on track for my deadlines?"</button>
+                <button class="quick-prompt-btn" onclick="sendChatPrompt('Help me reschedule my conflicts')">"Help me reschedule conflicts"</button>
+                <button class="quick-prompt-btn" onclick="sendChatPrompt('Break down my Research Paper goal')">"Break down Research Paper"</button>
+              </div>
+            </div>
+            
+            <div class="chat-main">
+              <div class="chat-messages" id="chat-messages-container">
+                <!-- JS will populate chat history -->
+              </div>
+              <div class="chat-input-area">
+                <input type="text" id="chat-input" placeholder="Type a message or command (e.g. 'Add Math homework due tomorrow')" onkeydown="handleChatSubmit(event)">
+                <button class="chat-send-btn" onclick="submitChat()">
+                  <i data-lucide="send"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- ================= CRUNCH SIMULATOR VIEW ================= -->
+        <section id="view-simulator" class="tab-view">
+          <div class="simulator-layout">
+            <div class="glass-panel simulator-controls">
+              <div class="panel-header">
+                <div class="panel-title-container">
+                  <i data-lucide="play-circle" class="icon-accent"></i>
+                  <h3>Agentic Workflow Simulator</h3>
+                </div>
+              </div>
+              <p class="simulator-intro">
+                Experience how NudgeAI operates autonomously when a deadline approaches. 
+                Follow this interactive walkthrough of the <strong>18-Hour Crunch Scenario</strong> (Section 5.2).
+              </p>
+              
+              <div class="scenario-timeline">
+                <div class="scenario-step" id="sim-step-1">
+                  <div class="step-num">1</div>
+                  <div class="step-content">
+                    <h5>Task Ingestion & Risk Detection</h5>
+                    <p>Assignment "English Essay" is due in 18 hours. Progress is 0%. NudgeAI escalates priority score automatically.</p>
+                    <button class="sim-action-btn" id="sim-btn-1" onclick="runSimStep(1)">Simulate Step 1</button>
+                  </div>
+                </div>
+                
+                <div class="scenario-step" id="sim-step-2">
+                  <div class="step-num">2</div>
+                  <div class="step-content">
+                    <h5>Task Decomposition</h5>
+                    <p>Reasoning Engine breaks down "English Essay" into: Outline, Research, Draft, and Review with time blocks.</p>
+                    <button class="sim-action-btn disabled" id="sim-btn-2" onclick="runSimStep(2)" disabled>Simulate Step 2</button>
+                  </div>
+                </div>
+                
+                <div class="scenario-step" id="sim-step-3">
+                  <div class="step-num">3</div>
+                  <div class="step-content">
+                    <h5>Context-Aware Nudge Dispatch</h5>
+                    <p>A proactive nudge fires, prompting the user: "Essay due in 18 hours. Let me block 2 hours now and 2 hours tonight?"</p>
+                    <button class="sim-action-btn disabled" id="sim-btn-3" onclick="runSimStep(3)" disabled>Simulate Step 3</button>
+                  </div>
+                </div>
+                
+                <div class="scenario-step" id="sim-step-4">
+                  <div class="step-num">4</div>
+                  <div class="step-content">
+                    <h5>Autonomous Scheduling & Outline Generation</h5>
+                    <p>Upon approval, NudgeAI blocks calendar slots, schedules around conflicts, and pre-drafts the essay outline.</p>
+                    <button class="sim-action-btn disabled" id="sim-btn-4" onclick="runSimStep(4)" disabled>Simulate Step 4</button>
+                  </div>
+                </div>
+                
+                <div class="scenario-step" id="sim-step-5">
+                  <div class="step-num">5</div>
+                  <div class="step-content">
+                    <h5>Dynamic Re-planning on Skip</h5>
+                    <p>Simulate the user skipping the first block. NudgeAI detects the skip and automatically re-plans remaining blocks.</p>
+                    <button class="sim-action-btn disabled" id="sim-btn-5" onclick="runSimStep(5)" disabled>Simulate Step 5</button>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="simulator-actions-footer">
+                <button class="action-btn-secondary" onclick="resetSimulator()">Reset Simulator</button>
+              </div>
+            </div>
+            
+            <div class="glass-panel simulator-status">
+              <div class="panel-header">
+                <div class="panel-title-container">
+                  <i data-lucide="terminal" class="icon-warning"></i>
+                  <h3>Live Simulator Output</h3>
+                </div>
+              </div>
+              <div class="sim-output-console" id="sim-console">
+                <div class="console-line system">&gt;&gt; Ready to run simulator. Click "Simulate Step 1" to begin.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+      </div>
+    </main>
+  </div>
+  
+  <!-- ================= ADD TASK MODAL ================= -->
+  <div id="add-task-modal" class="modal-overlay">
+    <div class="modal-content glass-panel">
+      <div class="modal-header">
+        <h3>Create New Task</h3>
+        <button class="modal-close" onclick="closeAddTaskModal()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="task-title">Task Name</label>
+          <input type="text" id="task-title" placeholder="e.g. History Homework">
+        </div>
+        <div class="form-group-row">
+          <div class="form-group">
+            <label for="task-deadline">Deadline Hours from now</label>
+            <input type="number" id="task-deadline" value="24" min="1">
+          </div>
+          <div class="form-group">
+            <label for="task-duration">Est. Duration (hours)</label>
+            <input type="number" id="task-duration" value="2" min="1">
+          </div>
+        </div>
+        <div class="form-group-row">
+          <div class="form-group">
+            <label for="task-dependency">Dependency (Optional)</label>
+            <select id="task-dependency">
+              <option value="">None</option>
+              <!-- Populated by JS -->
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="task-goal-category">Goal Category</label>
+            <select id="task-goal-category">
+              <option value="Academic">Academic</option>
+              <option value="Career">Career</option>
+              <option value="Personal">Personal</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="checkbox-container">
+            <input type="checkbox" id="task-auto-execute" checked>
+            <span>Allow Autonomous Action (Outline drafting, scheduling assistance)</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn-secondary" onclick="closeAddTaskModal()">Cancel</button>
+        <button class="action-btn-primary" onclick="submitAddTask()">Save Task</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- ================= ADD GOAL MODAL ================= -->
+  <div id="add-goal-modal" class="modal-overlay">
+    <div class="modal-content glass-panel">
+      <div class="modal-header">
+        <h3>Create New Long-Term Goal / Habit</h3>
+        <button class="modal-close" onclick="closeAddGoalModal()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="goal-title">Goal / Habit Title</label>
+          <input type="text" id="goal-title" placeholder="e.g. Apply to 5 jobs a week">
+        </div>
+        <div class="form-group">
+          <label for="goal-type">Type</label>
+          <select id="goal-type">
+            <option value="Habit">Recurring Habit / Streak Tracker</option>
+            <option value="Milestone">Milestone Goal (Target Date)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="goal-target">Target Metric / Deadline</label>
+          <input type="text" id="goal-target" placeholder="e.g. 5 times per week, or Dec 15">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="action-btn-secondary" onclick="closeAddGoalModal()">Cancel</button>
+        <button class="action-btn-primary" onclick="submitAddGoal()">Create Goal</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- ================= NOTIFICATIONS CONTAINER (TOASTS) ================= -->
+  <div class="toast-container" id="toast-container"></div>
+  
+  <!-- ================= EMAIL DRAFT OVERLAY ================= -->
+  <div id="draft-overlay" class="modal-overlay">
+    <div class="modal-content glass-panel draft-modal">
+      <div class="modal-header">
+        <h3><i data-lucide="mail" class="icon-accent"></i> AI Generated Draft</h3>
+        <button class="modal-close" onclick="closeDraftModal()"><i data-lucide="x"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="draft-metadata">
+          <div><strong>To:</strong> <span id="draft-to">prof.jones@university.edu</span></div>
+          <div><strong>Subject:</strong> <span id="draft-subject">Extension Request: Research Paper - Alex Newman</span></div>
+        </div>
+        <div class="draft-body" id="draft-body-content" contenteditable="true">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span class="draft-warning-text"><i data-lucide="info"></i> Editing enabled. NudgeAI will send after approval.</span>
+        <div class="draft-actions">
+          <button class="action-btn-secondary" onclick="closeDraftModal()">Cancel</button>
+          <button class="action-btn-primary" onclick="approveDraftEmail()">Approve & Send</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
