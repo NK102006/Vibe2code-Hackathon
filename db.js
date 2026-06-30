@@ -11,8 +11,9 @@ if (isProduction) {
   });
   console.log('Using Vercel Postgres database.');
 } else {
-  const sqlite3 = require('sqlite3').verbose();
-  const dbPath = path.join(__dirname, 'nudgeai.db');
+  const sqliteModule = 'sqlite3';
+  const sqlite3 = require(sqliteModule).verbose();
+  const dbPath = path.join(__dirname, '../nudgeai.db');
   const sqliteDb = new sqlite3.Database(dbPath);
   
   // Wrap SQLite calls to match PG Pool API: dbInstance.query(text, params) -> Promise<{ rows }>
@@ -23,7 +24,6 @@ if (isProduction) {
         let sqliteText = text.replace(/\$(\d+)/g, '?');
         
         // Remove RETURNING clause for SQLite if present (older versions don't support it well)
-        // If RETURNING is present, we strip it out for SQLite execution
         let hasReturning = false;
         if (sqliteText.toUpperCase().includes('RETURNING')) {
           hasReturning = true;
