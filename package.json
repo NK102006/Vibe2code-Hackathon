@@ -1,0 +1,21 @@
+{
+  "name": "hackathon_project",
+  "version": "1.0.0",
+  "description": "**NudgeAI** is a premium, client-side productivity companion that plans, prioritizes, and resolves conflict blocks on your behalf before deadlines hit. Engineered with proactive agentic principles, it acts as a dynamic coordinator for students, freelancers, and professionals facing scheduling crunches.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "mongoose": "^9.9.1",
+    "nodemailer": "^9.0.3"
+  }
+}
